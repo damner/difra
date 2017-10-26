@@ -12,16 +12,14 @@ abstract class XML extends Common
     /**
      * Assemble resources to single XML
      * @param string $instance
-     * @param bool $withFilenames
      * @return string
      */
-    protected function processData($instance, $withFilenames = false)
+    protected function processData($instance)
     {
         $files = $this->getFiles($instance);
 
         $newXml = new \SimpleXMLElement(sprintf('<?xml version="1.0" encoding="UTF-8"?><%s></%s>', $this->type, $this->type));
         foreach ($files as $file) {
-            $filename = $withFilenames ? $file['raw'] : null;
             $old = libxml_use_internal_errors(true);
             $xml = simplexml_load_file($file['raw']);
             if ($xml === false) {
@@ -33,7 +31,7 @@ abstract class XML extends Common
                 throw new Exception($message);
             }
             libxml_use_internal_errors($old);
-            $this->mergeXML($newXml, $xml, $filename);
+            $this->mergeXML($newXml, $xml);
             foreach ($xml->attributes() as $key => $value) {
                 $newXml->addAttribute($key, $value);
             }
@@ -69,40 +67,26 @@ abstract class XML extends Common
      * Recursively merge two XML trees
      * @param \SimpleXMLElement $xml1
      * @param \SimpleXMLElement $xml2
-     * @param string|null $filename
      */
-    private function mergeXML(\SimpleXMLElement $xml1, \SimpleXMLElement $xml2, $filename = null)
+    private function mergeXML(\SimpleXMLElement $xml1, \SimpleXMLElement $xml2)
     {
         /** @var \SimpleXMLElement $node */
-        foreach ($xml2 as $name => $node) {
+        foreach ($xml2->children() as $name => $node) {
             if (isset($node['atomic'])) {
                 $dom = dom_import_simplexml($xml1);
                 $domNode = $dom->ownerDocument->createDocumentFragment();
                 $domNode->appendXML($node->asXML());
                 $dom->appendChild($domNode);
+
                 continue;
             }
-            if (!$filename and property_exists($xml1, $name)) {
-                $attr = $xml1->$name->attributes();
-                foreach ($node->attributes() as $key => $value) {
-                    if (!isset($attr[$key])) {
-                        $xml1->$name->addAttribute($key, $value);
-                    } elseif ($value != '') {
-                        $xml1->$name->attributes()->$key = $value;
-                    }
-                }
-                /** @noinspection PhpParamsInspection */
-                $this->mergeXML($xml1->$name, $node, $filename);
-            } else {
-                $new = $xml1->addChild($name, trim($node) ? $node : '');
-                if ($filename) {
-                    $new->addAttribute('source', $filename);
-                }
-                foreach ($node->attributes() as $key => $value) {
-                    $new->addAttribute($key, $value);
-                }
-                $this->mergeXML($new, $node, $filename);
+
+            $new = $xml1->addChild($name, trim($node));
+            foreach ($node->attributes() as $key => $value) {
+                $new[$key] = $value;
             }
+
+            $this->mergeXML($new, $node);
         }
     }
 }
