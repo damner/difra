@@ -31,15 +31,18 @@ abstract class XML extends Common
                 throw new Exception($message);
             }
             libxml_use_internal_errors($old);
+
             $this->mergeXML($newXml, $xml);
             foreach ($xml->attributes() as $key => $value) {
                 $newXml->addAttribute($key, $value);
             }
         }
+
         if (method_exists($this, 'postprocess')) {
             /** @noinspection PhpUndefinedMethodInspection */
             $this->postprocess($newXml, $instance);
         }
+
         return $newXml->asXML();
     }
 
@@ -60,6 +63,7 @@ abstract class XML extends Common
         if ($error->level === \LIBXML_ERR_FATAL) {
             $type = 'fatal error';
         }
+
         return sprintf('libxml %s %s: %s in file %s (%s)', $type, $error->code, trim($error->message), $error->file, $error->line);
     }
 
@@ -70,23 +74,78 @@ abstract class XML extends Common
      */
     private function mergeXML(\SimpleXMLElement $xml1, \SimpleXMLElement $xml2)
     {
+        $removed = [];
+
+        $old = [];
+        foreach ($xml1->children() as $name => $node) {
+            $old[$name][] = clone $node;
+        }
+
         /** @var \SimpleXMLElement $node */
         foreach ($xml2->children() as $name => $node) {
             if (isset($node['atomic'])) {
-                $dom = dom_import_simplexml($xml1);
-                $domNode = $dom->ownerDocument->createDocumentFragment();
+                $dom1 = dom_import_simplexml($xml1);
+                $domNode = $dom1->ownerDocument->createDocumentFragment();
                 $domNode->appendXML($node->asXML());
-                $dom->appendChild($domNode);
+
+                if (isset($xml1->$name)) {
+                    $attributes = $xml1->$name->attributes();
+                    $dom1->replaceChild($domNode, dom_import_simplexml($xml1->$name));
+                    foreach ($attributes as $key => $value) {
+                        dom_import_simplexml($xml1->$name)->setAttribute($key, $value);
+                    }
+                } else {
+                    $dom1->appendChild($domNode);
+                }
 
                 continue;
             }
 
-            $new = $xml1->addChild($name, trim($node));
-            foreach ($node->attributes() as $key => $value) {
-                $new[$key] = $value;
+            if (!isset($old[$name])) {
+                $subNode = $xml1->addChild($name);
+
+                // Set node content (text)
+                dom_import_simplexml($subNode)->textContent = trim((string)$node);
+
+                // Add new attributes
+                foreach ($node->attributes() as $key => $value) {
+                    $subNode[$key] = $value;
+                }
+
+                // Add child nodes
+                $this->mergeXML($subNode, $node);
+
+                continue;
             }
 
-            $this->mergeXML($new, $node);
+            foreach ($old[$name] as $oldNode) {
+                if (!in_array($name, $removed, true)) {
+                    $removed[] = $name;
+                    unset($xml1->$name);
+                }
+
+                // Create node
+                $subNode = $xml1->addChild($name);
+
+                // Set node content (text)
+                dom_import_simplexml($subNode)->textContent = trim((string)$node);
+
+                // Add old attributes
+                foreach ($oldNode->attributes() as $key => $value) {
+                    $subNode[$key] = $value;
+                }
+
+                // Add new attributes
+                foreach ($node->attributes() as $key => $value) {
+                    $subNode[$key] = $value;
+                }
+
+                // Merge old child nodes
+                $this->mergeXML($subNode, $oldNode);
+
+                // Merge new child nodes
+                $this->mergeXML($subNode, $node);
+            }
         }
     }
 }
