@@ -6,7 +6,7 @@ class ResourcerTest extends PHPUnit_Framework_TestCase
     {
         $oldUri = \Difra\Envi::getUri();
         \Difra\Envi::setUri('/adm/development/plugins');
-        $menu = \Difra\Resourcer::getInstance('menu')->compile('adm', true);
+        $menu = \Difra\Resourcer::getInstance('menu')->compile('adm');
         $this->assertNotEmpty($menu);
         \Difra\Envi::setUri($oldUri);
     }

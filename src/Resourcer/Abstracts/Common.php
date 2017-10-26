@@ -45,13 +45,13 @@ abstract class Common
 
     /**
      * Validate instance name
-     * @param $instance
+     * @param string $instance
      * @return bool
      * @throws Exception
      */
     private function checkInstance($instance)
     {
-        if (!preg_match('/^[a-z0-9_-]+$/i', $instance)) {
+        if (!preg_match('/^[a-z0-9_-]+$/iu', $instance)) {
             throw new Exception("Bad Resourcer instance name: '$instance'");
         }
         return true;
@@ -59,7 +59,7 @@ abstract class Common
 
     /**
      * Output resource
-     * @param $instance
+     * @param string $instance
      * @return bool
      * @throws Exception
      */
@@ -134,8 +134,8 @@ abstract class Common
 
     /**
      * Create gz version for resource
-     * @param $instance
-     * @return string
+     * @param string $instance
+     * @return string|bool
      */
     public function compileGZ($instance)
     {
@@ -184,11 +184,10 @@ abstract class Common
 
     /**
      * Get compiled resource
-     * @param      $instance
-     * @param bool $withSources
-     * @return bool|null
+     * @param string $instance
+     * @return null|string
      */
-    public function compile($instance, $withSources = false)
+    public function compile($instance)
     {
         if (!$this->checkInstance($instance)) {
             return false;
@@ -232,7 +231,7 @@ abstract class Common
             }
 
             // compile resource
-            $resource = $this->realCompile($instance, $withSources);
+            $resource = $this->realCompile($instance);
 
             // cache data
             $cache->put($cacheKey, $resource, self::CACHE_TTL);
@@ -244,25 +243,23 @@ abstract class Common
 
             return $resource;
         } else {
-            return $this->realCompile($instance, $withSources);
+            return $this->realCompile($instance);
         }
     }
 
     /**
      * Compile resource
      * @param string $instance
-     * @param bool $withSources
      * @throws Exception
      * @return string
      */
-    private function realCompile($instance, $withSources = false)
+    private function realCompile($instance)
     {
         $time = microtime(true);
         $res = false;
         if ($this->find($instance)) {
             $this->processDirs($instance);
-            /** @noinspection PhpMethodParametersCountMismatchInspection */
-            $res = $this->processData($instance, $withSources);
+            $res = $this->processData($instance);
         }
         $res = $this->processText($res);
         Debugger::addLine(
@@ -299,7 +296,7 @@ abstract class Common
 
     /**
      * Get included instances
-     * @param $instance
+     * @param string $instance
      * @return string[]
      */
     protected function getIncludes($instance)
@@ -379,7 +376,7 @@ abstract class Common
 
     /**
      * Search resources by directories
-     * @param $instance
+     * @param string $instance
      */
     public function processDirs($instance)
     {

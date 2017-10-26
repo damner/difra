@@ -114,7 +114,7 @@ class LocaleManage
      */
     public function getLocale($locale)
     {
-        return Resourcer::getInstance('locale')->compile($locale, true);
+        return Resourcer::getInstance('locale')->compile($locale);
     }
 
     /**
