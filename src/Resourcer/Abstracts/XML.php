@@ -11,7 +11,7 @@ abstract class XML extends Common
 {
     /**
      * Assemble resources to single XML
-     * @param      $instance
+     * @param string $instance
      * @param bool $withFilenames
      * @return string
      */
