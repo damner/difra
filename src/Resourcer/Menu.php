@@ -19,17 +19,17 @@ class Menu extends Abstracts\XML
      * @param \SimpleXMLElement $xml
      * @param string $instance
      */
-    protected function postprocess($xml, $instance)
+    protected function postprocess(\SimpleXMLElement $xml, $instance)
     {
         $xml->addAttribute('instance', $instance);
         /** @noinspection PhpUndefinedFieldInspection */
         if ($xml->attributes()->prefix) {
             /** @noinspection PhpUndefinedFieldInspection */
-            $prefix = $xml->attributes()->prefix;
+            $href = $xml->attributes()->prefix;
         } else {
-            $prefix = '/' . $instance;
+            $href = '/' . $instance;
         }
-        $this->recursiveProcessor($xml, $prefix, 'menu', $instance);
+        $this->recursiveProcessor($xml, $href, 'menu', $instance);
     }
 
     /**
@@ -37,9 +37,8 @@ class Menu extends Abstracts\XML
      * @param string $href
      * @param string $prefix
      * @param string $instance
-     * @internal param string $url
      */
-    private function recursiveProcessor($node, $href, $prefix, $instance)
+    private function recursiveProcessor(\SimpleXMLElement $node, $href, $prefix, $instance)
     {
         /** @var \SimpleXMLElement $subNode */
         foreach ($node as $subname => $subNode) {
@@ -49,13 +48,13 @@ class Menu extends Abstracts\XML
                     $subNode->addAttribute('hidden', 1);
                 }
             }
-            $newHref = "$href/$subname";
-            $newPrefix = "{$prefix}_{$subname}";
+            $newHref = $href . '/' . $subname;
+            $newPrefix = $prefix . '_' . $subname;
             $subNode->addAttribute('id', $newPrefix);
             /** @noinspection PhpUndefinedFieldInspection */
             if (!isset($subNode->attributes()->href)) {
                 $subNode->addAttribute('href', $newHref);
-            };
+            }
             $subNode->addAttribute('pseudoHref', $newHref);
             $subNode->addAttribute('xpath', 'locale/menu/' . $instance . '/' . $newPrefix);
             $this->recursiveProcessor($subNode, $newHref, $newPrefix, $instance);
