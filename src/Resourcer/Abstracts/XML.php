@@ -75,6 +75,13 @@ abstract class XML extends Common
     {
         /** @var \SimpleXMLElement $node */
         foreach ($xml2 as $name => $node) {
+            if (isset($node['atomic'])) {
+                $dom = dom_import_simplexml($xml1);
+                $domNode = $dom->ownerDocument->createDocumentFragment();
+                $domNode->appendXML($node->asXML());
+                $dom->appendChild($domNode);
+                continue;
+            }
             if (!$filename and property_exists($xml1, $name)) {
                 $attr = $xml1->$name->attributes();
                 foreach ($node->attributes() as $key => $value) {
