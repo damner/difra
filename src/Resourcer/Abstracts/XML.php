@@ -40,15 +40,6 @@ abstract class XML extends Common
             }
         }
 
-        echo (microtime(1) - $t).PHP_EOL.PHP_EOL;
-        echo $instance.PHP_EOL.PHP_EOL;
-        if ($instance === 'adm') {
-            $dom = dom_import_simplexml($newXml);
-            $dom->ownerDocument->formatOutput = true;
-            echo $dom->ownerDocument->saveXML().PHP_EOL.PHP_EOL;
-            exit;
-        }
-
         if (method_exists($this, 'postprocess')) {
             /** @noinspection PhpUndefinedMethodInspection */
             $this->postprocess($newXml, $instance);
