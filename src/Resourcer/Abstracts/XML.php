@@ -18,6 +18,8 @@ abstract class XML extends Common
     {
         $files = $this->getFiles($instance);
 
+        $t = microtime(1);
+
         $newXml = new \SimpleXMLElement(sprintf('<?xml version="1.0" encoding="UTF-8"?><%s></%s>', $this->type, $this->type));
         foreach ($files as $file) {
             $old = libxml_use_internal_errors(true);
@@ -36,6 +38,15 @@ abstract class XML extends Common
             foreach ($xml->attributes() as $key => $value) {
                 $newXml->addAttribute($key, $value);
             }
+        }
+
+        echo (microtime(1) - $t).PHP_EOL.PHP_EOL;
+        echo $instance.PHP_EOL.PHP_EOL;
+        if ($instance === 'adm') {
+            $dom = dom_import_simplexml($newXml);
+            $dom->ownerDocument->formatOutput = true;
+            echo $dom->ownerDocument->saveXML().PHP_EOL.PHP_EOL;
+            exit;
         }
 
         if (method_exists($this, 'postprocess')) {
@@ -128,7 +139,10 @@ abstract class XML extends Common
                 $subNode = $xml1->addChild($name);
 
                 // Set node content (text)
-                dom_import_simplexml($subNode)->textContent = trim((string)$node);
+                $text = trim((string)$node);
+                if ($text !== '') {
+                    dom_import_simplexml($subNode)->textContent = $text;
+                }
 
                 // Add old attributes
                 foreach ($oldNode->attributes() as $key => $value) {
