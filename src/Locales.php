@@ -42,35 +42,65 @@ class Locales
 
     /**
      * Get text string from current locale (short form)
-     * @param $xpath
-     * @return bool|string
+     * @param string $xpath
+     * @param string[] $values
+     * @return string|null
      */
-    public static function get($xpath)
+    public static function get($xpath, array $values = [])
     {
-        /** @noinspection PhpDeprecationInspection */
-        return @self::getInstance()->getXPath($xpath);
+        $xml = self::getInstance()->getXPath($xpath);
+
+        if ($xml === null) {
+            return null;
+        }
+
+        if (count($values)) {
+            $xml = preg_replace_callback('|<v-([a-zA-Z0-9-]+)\s*/>|u', function (array $matches) use ($values) {
+                if (array_key_exists($matches[1], $values)) {
+                    return htmlspecialchars($values[$matches[1]], ENT_QUOTES | ENT_HTML5);
+                }
+
+                return $matches[0];
+            }, $xml);
+        }
+
+        return $xml;
     }
 
     /**
      * Get locale string by XPath
-     * NOT DEPRECATED. Marked as deprecated to get rid of old \Difra\Locales::getInstance()->getXPath( ... ) calls
-     * in favor of \Difra\Locales::get( ... ) calls.
-     * @deprecated
      * @param string $xpath
-     * @return string|bool
+     * @return string|null
      */
-    public function getXPath($xpath)
+    public function getXPath($query)
     {
-        static $simpleXML = null;
-        if (is_null($simpleXML)) {
-            $this->load();
-            $simpleXML = simplexml_import_dom($this->localeXML);
+        $this->load();
+
+        $xpath = new \DOMXPath($this->localeXML);
+
+        $elements = $xpath->query($query);
+        if ($elements === false) {
+            if (Debugger::isEnabled()) {
+                throw new \Difra\Exception(sprintf('Bad XPath expression "%s"', $query));
+            }
+
+            return null;
         }
-        $s = $simpleXML->xpath($xpath);
-        if (empty($s) and Debugger::isEnabled()) {
-            $s = ['No language item for: ' . $xpath];
+
+        if (!$elements->length) {
+            if (Debugger::isEnabled()) {
+                return sprintf('No language item for "%s"', $query);
+            }
+
+            return null;
         }
-        return sizeof($s) ? (string)$s[0] : false;
+
+        $xml = '';
+        foreach ($elements[0]->childNodes as $childNode){
+            $xml .= $this->localeXML->saveXml($childNode);
+        }
+
+        return $xml;
     }
 
     /**
