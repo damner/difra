@@ -99,7 +99,8 @@ class Envi
             'host' => self::getSubsite(),
             'hostname' => self::getHost(),
             'mainhost' => self::getHost(true),
-            'fullhost' => self::getURLPrefix()
+            'fullhost' => self::getURLPrefix(),
+            'build' => Envi\Version::getBuild(),
         ];
     }
 
