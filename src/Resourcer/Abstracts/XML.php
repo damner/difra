@@ -13,6 +13,7 @@ abstract class XML extends Common
      * Assemble resources to single XML
      * @param string $instance
      * @return string
+     * @throws Exception
      */
     protected function processData($instance)
     {
