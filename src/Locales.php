@@ -69,8 +69,9 @@ class Locales
 
     /**
      * Get locale string by XPath
-     * @param string $xpath
-     * @return string|null
+     * @param string $query
+     * @return null|string
+     * @throws Exception
      */
     public function getXPath($query)
     {
@@ -81,7 +82,7 @@ class Locales
         $elements = $xpath->query($query);
         if ($elements === false) {
             if (Debugger::isEnabled()) {
-                throw new \Difra\Exception(sprintf('Bad XPath expression "%s"', $query));
+                throw new Exception(sprintf('Bad XPath expression "%s"', $query));
             }
 
             return null;
