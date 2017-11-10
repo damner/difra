@@ -19,8 +19,6 @@ abstract class XML extends Common
     {
         $files = $this->getFiles($instance);
 
-        $t = microtime(1);
-
         $newXml = new \SimpleXMLElement(sprintf('<?xml version="1.0" encoding="UTF-8"?><%s></%s>', $this->type, $this->type));
         foreach ($files as $file) {
             $old = libxml_use_internal_errors(true);
