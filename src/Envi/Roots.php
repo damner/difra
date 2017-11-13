@@ -102,7 +102,7 @@ class Roots
 
     /**
      * Get user controlled roots (main, application, additional)
-     * @param bool $order
+     * @param string $order
      * @return array|null
      */
     public static function getUserRoots($order = self::FIRST_FW)
