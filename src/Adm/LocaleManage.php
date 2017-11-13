@@ -215,8 +215,7 @@ class LocaleManage
         static $controllers = null;
         if (is_null($controllers)) {
             $controllers = [];
-            $dirs = Action::getControllerPaths();
-            foreach ($dirs as $dir) {
+            foreach (Action::getControllerPaths() as $dir) {
                 $this->getAllFiles($controllers, $dir);
             }
         }
@@ -229,10 +228,10 @@ class LocaleManage
 
     /**
      * Get all locale files from directory (recursive)
-     * @param $collection
-     * @param $dir
+     * @param string[] $collection
+     * @param string $dir
      */
-    public function getAllFiles(&$collection, $dir)
+    private function getAllFiles(array &$collection, $dir)
     {
         if (!is_dir($dir)) {
             return;
