@@ -218,7 +218,6 @@ class LocaleManage
             $dirs = Action::getControllerPaths();
             foreach ($dirs as $dir) {
                 $this->getAllFiles($controllers, $dir);
-                $this->getAllFiles($controllers, $dir . '../lib');
             }
         }
         foreach ($controllers as $controller) {
