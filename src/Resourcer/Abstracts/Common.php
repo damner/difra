@@ -270,7 +270,7 @@ abstract class Common
 
     /**
      * Search for resource directories
-     * @param string $instance
+     * @param $parentInstance
      * @return bool
      */
     private function find($parentInstance)
@@ -446,6 +446,8 @@ abstract class Common
      */
     public function getFiles($instance)
     {
+        var_dump($instance, $this->resources[$instance]);
+
         $files = [];
         if (!empty($this->resources[$instance]['specials'])) {
             foreach ($this->resources[$instance]['specials'] as $resource) {
