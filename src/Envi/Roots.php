@@ -33,16 +33,11 @@ class Roots
      */
     public static function get($order)
     {
-        $directories = null;
-        $directoriesReversed = null;
         if ($order == self::FIRST_APP) {
-            return $directoriesReversed ?: $directoriesReversed = array_reverse(self::get(self::FIRST_FW));
-        }
-        if (!is_null($directories)) {
-            return $directories;
+            return array_reverse(self::get(self::FIRST_FW));
         }
         $me = self::getInstance();
-        return $directories = array_merge(
+        return array_merge(
             [$me->fw],
             $me->plugins,
             self::getUserRoots($order)
