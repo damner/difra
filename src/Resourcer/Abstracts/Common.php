@@ -52,7 +52,7 @@ abstract class Common
     private function checkInstance($instance)
     {
         if (!preg_match('/^[a-z0-9_-]+$/iu', $instance)) {
-            throw new Exception("Bad Resourcer instance name: '$instance'");
+            throw new Exception(sprintf('Bad Resourcer instance name: "%s"', $instance));
         }
         return true;
     }
@@ -66,7 +66,7 @@ abstract class Common
     public function view($instance)
     {
         if (!$this->isPrintable()) {
-            throw new Exception("Resource of type '{$this->type}' is not printable");
+            throw new Exception(sprintf('Resource of type "%s" is not printable', $this->type));
         }
         // Cut extension
         $parts = explode('.', $instance);
@@ -113,7 +113,7 @@ abstract class Common
             return false;
         }
         header('Content-Type: ' . $this->contentType);
-        if (!$modified = Cache::getInstance()->get("{$instance}_{$this->type}_modified")) {
+        if (!$modified = Cache::getInstance()->get($instance . '_' . $this->type . '_modified')) {
             $modified = gmdate('D, d M Y H:i:s') . ' GMT';
         }
         View::addExpires(Controller::DEFAULT_CACHE);
@@ -144,7 +144,7 @@ abstract class Common
             return false;
         }
 
-        $cacheKey = "{$instance}_{$this->type}";
+        $cacheKey = $instance . '_' . $this->type;
         if ($cached = $cache->get($cacheKey . '_gz')) {
             if ($cache->get($cacheKey . '_gz_build') == Version::getBuild()) {
                 return $cached;
@@ -152,7 +152,7 @@ abstract class Common
         }
 
         // wait for updated data, try to get lock
-        $busyKey = "{$cacheKey}_gz_busy";
+        $busyKey = $cacheKey . '_gz_busy';
         $busyValue = rand(100000, 999999);
         while (true) {
             if (!$currentBusy = $cache->get($busyKey)) {
@@ -197,16 +197,16 @@ abstract class Common
         $cache = Cache::getInstance();
 
         if ($cache->adapter != Cache::INST_NONE) {
-            $cacheKey = "{$instance}_{$this->type}";
+            $cacheKey = $instance . '_' . $this->type;
             if (!is_null($cached = $cache->get($cacheKey))) {
                 if ($cache->get($cacheKey . '_build') == Version::getBuild()) {
-                    Debugger::addLine("Using cached resource {$this->type}/{$instance}");
+                    Debugger::addLine(sprintf('Using cached resource %s/%s', $this->type, $instance));
                     return $cached;
                 }
             }
 
             // wait for updated data, try to get lock
-            $busyKey = "{$cacheKey}_busy";
+            $busyKey = $cacheKey . '_busy';
             $busyValue = rand(100000, 999999);
             while (true) {
                 if (!$currentBusy = $cache->get($busyKey)) {
@@ -262,32 +262,29 @@ abstract class Common
             $res = $this->processData($instance);
         }
         $res = $this->processText($res);
-        Debugger::addLine(
-            "Resource {$this->type}/{$instance} compiled in " . round(1000 * (microtime(true) - $time), 2) . 'ms'
-        );
+        Debugger::addLine(sprintf('Resource %s/%s compiled in %s ms', $this->type, $instance, round(1000 * (microtime(true) - $time), 2)));
         return $res;
     }
 
     /**
      * Search for resource directories
-     * @param $parentInstance
+     * @param string $parentInstance
      * @return bool
      */
     private function find($parentInstance)
     {
-        $found = false;
-        $paths = Roots::get(Roots::FIRST_APP);
+        $paths = Roots::get();
         $instances = $this->getIncludes($parentInstance);
         $directories = [];
         foreach ($paths as $dir) {
             foreach ($instances as $instance) {
-                if (is_dir($d = "{$dir}/{$this->type}/{$instance}")) {
-                    $found = true;
+                $d = $dir . '/' . $this->type . '/' . $instance;
+                if (is_dir($d)) {
                     $directories[] = $d;
                 }
             }
         }
-        if (!$found) {
+        if (!count($directories)) {
             return false;
         }
         $this->addDirs($parentInstance, $directories);
@@ -339,8 +336,8 @@ abstract class Common
     public function findInstances()
     {
         $instances = [];
-        foreach (Roots::get(Roots::FIRST_FW) as $parent) {
-            $path = "$parent/{$this->type}";
+        foreach (Roots::get() as $parent) {
+            $path = $parent . '/' . $this->type;
             if (!is_dir($path)) {
                 continue;
             }
@@ -392,7 +389,7 @@ abstract class Common
                 if ($dirEntry{0} == '.') {
                     continue;
                 }
-                $entry = "$dir/$dirEntry";
+                $entry = $dir . '/' . $dirEntry;
                 if (is_dir($entry)) { // "special"
                     $exp = explode('-', $dirEntry);
                     $special = [
@@ -414,13 +411,13 @@ abstract class Common
                         if ($specSub{0} == '.') {
                             continue;
                         }
-                        if (is_file("$entry/$specSub")) {
+                        if (is_file($entry . '/' . $specSub)) {
                             $name = str_replace('.min.', '.', $specSub);
                             $type = ($name == $specSub) ? 'raw' : 'min';
                             if (!isset($special['files'][$name])) {
                                 $special['files'][$name] = [];
                             }
-                            $special['files'][$name][$type] = "$entry/$specSub";
+                            $special['files'][$name][$type] = $entry . '/' . $specSub;
                         }
                     }
                     $this->resources[$instance]['specials'][$special['name']] = $special;
@@ -446,8 +443,6 @@ abstract class Common
      */
     public function getFiles($instance)
     {
-        var_dump($instance, $this->resources[$instance]);
-
         $files = [];
         if (!empty($this->resources[$instance]['specials'])) {
             foreach ($this->resources[$instance]['specials'] as $resource) {

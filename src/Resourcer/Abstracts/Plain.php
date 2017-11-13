@@ -28,7 +28,6 @@ abstract class Plain extends Common
             }
         }
         if (!empty($this->resources[$instance]['files'])) {
-            $this->resources[$instance]['files'] = array_reverse($this->resources[$instance]['files']);
             foreach ($this->resources[$instance]['files'] as $file) {
                 $result .= $this->getFile($file);
             }

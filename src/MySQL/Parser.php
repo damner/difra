@@ -55,7 +55,7 @@ class Parser
      */
     public static function getGoalSQL()
     {
-        $paths = Roots::get(Roots::FIRST_FW);
+        $paths = Roots::get();
         $tables = [];
         foreach ($paths as $path) {
             if (is_readable($path . '/bin/db.sql')) {

@@ -191,7 +191,7 @@ class Action
         if (!is_null($controllerDirs)) {
             return $controllerDirs;
         }
-        $controllerDirs = Roots::get(Roots::FIRST_APP);
+        $controllerDirs = Roots::get();
         foreach ($controllerDirs as $k => $v) {
             $controllerDirs[$k] = $v . '/controllers';
         }
@@ -212,13 +212,13 @@ class Action
      * @param string[] $parts
      * @return string[]
      */
-    private static function findControllerDirs(&$parts)
+    private static function findControllerDirs(array &$parts)
     {
         $path = '';
         $depth = 0;
         $controllerDirs = $dirs = self::getControllerPaths();
         foreach ($parts as $part) {
-            $path .= "/$part";
+            $path .= '/' . $part;
             $newDirs = [];
             foreach ($controllerDirs as $nextDir) {
                 if (is_dir($nextDir . $path)) {
@@ -247,9 +247,9 @@ class Action
         $cName = $controllerFile = null;
         if (!empty($parts)) {
             foreach ($dirs as $tmpDir) {
-                if (is_file("$tmpDir/{$parts[0]}.php")) {
+                if (is_file($tmpDir . '/'. $parts[0] . '.php')) {
                     $cName = $parts[0];
-                    $controllerFile = "{$tmpDir}/{$cName}.php";
+                    $controllerFile = $tmpDir . '/' . $cName . '.php';
                     break;
                 }
             }
@@ -258,7 +258,7 @@ class Action
             foreach ($dirs as $tmpDir) {
                 if (is_file($tmpDir . '/index.php')) {
                     $cName = 'index';
-                    $controllerFile = "{$tmpDir}/index.php";
+                    $controllerFile = $tmpDir . '/index.php';
                     break;
                 }
             }
@@ -282,7 +282,7 @@ class Action
      * @param string[] $parts
      * @return bool|string
      */
-    private static function findAction(&$parts)
+    private static function findAction(array &$parts)
     {
         $foundMethod = false;
         $methodNames = !empty($parts) ? [$parts[0], 'index'] : ['index'];
@@ -293,11 +293,11 @@ class Action
                     $m = $methodTmp . $methodType[0] . 'Action' . $methodType[1]
                 )) {
                     $foundMethod = $methodTmp;
-                    $methodVar = "method{$methodType[0]}{$methodType[1]}";
+                    $methodVar = 'method' . $methodType[0] . $methodType[1];
                     self::${$methodVar} = $m;
                 }
             }
-            if ($foundMethod and $foundMethod != 'index') {
+            if ($foundMethod and $foundMethod !== 'index') {
                 array_shift($parts);
                 break;
             }
@@ -320,7 +320,7 @@ class Action
      * @param string $actionMethod
      * @param array $parameters
      */
-    public static function setCustomAction($controllerClass, $actionMethod, $parameters = [])
+    public static function setCustomAction($controllerClass, $actionMethod, array $parameters = [])
     {
         self::$controllerClass = $controllerClass;
         self::$method = $actionMethod;

@@ -10,9 +10,6 @@ use Difra\Plugin;
  */
 class Roots
 {
-    const FIRST_FW = 'asc';
-    const FIRST_APP = 'desc';
-
     /** @var string Framework root */
     private $fw = null;
     /** @var string[] Plugin roots */
@@ -28,19 +25,15 @@ class Roots
 
     /**
      * Get roots list
-     * @param string $order
      * @return string[]
      */
-    public static function get($order)
+    public static function get()
     {
-        if ($order === self::FIRST_APP) {
-            return array_reverse(self::get(self::FIRST_FW));
-        }
         $me = self::getInstance();
         return array_merge(
             [$me->fw],
             $me->plugins,
-            self::getUserRoots($order)
+            self::getUserRoots()
         );
     }
 
@@ -97,14 +90,10 @@ class Roots
 
     /**
      * Get user controlled roots (main, application, additional)
-     * @param string $order
      * @return string[]
      */
-    public static function getUserRoots($order = self::FIRST_FW)
+    public static function getUserRoots()
     {
-        if ($order === self::FIRST_APP) {
-            return array_reverse(self::getUserRoots(self::FIRST_FW));
-        }
         $me = self::getInstance();
         return array_merge(
             [$me->main],

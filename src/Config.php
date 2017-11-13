@@ -110,7 +110,7 @@ class Config
             return $config;
         }
         $config = [];
-        foreach (Roots::get(Roots::FIRST_FW) as $root) {
+        foreach (Roots::get() as $root) {
             if (is_file($file = $root . '/config.php')) {
                 /** @noinspection PhpIncludeInspection */
                 $newConfig = include($file);
