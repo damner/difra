@@ -28,12 +28,12 @@ class Roots
 
     /**
      * Get roots list
-     * @param bool $order
+     * @param string $order
      * @return string[]
      */
     public static function get($order)
     {
-        if ($order == self::FIRST_APP) {
+        if ($order === self::FIRST_APP) {
             return array_reverse(self::get(self::FIRST_FW));
         }
         $me = self::getInstance();
@@ -98,20 +98,15 @@ class Roots
     /**
      * Get user controlled roots (main, application, additional)
      * @param string $order
-     * @return array|null
+     * @return string[]
      */
     public static function getUserRoots($order = self::FIRST_FW)
     {
-        $directories = null;
-        $directoriesReversed = null;
-        if ($order == self::FIRST_APP) {
-            return $directoriesReversed ?: $directoriesReversed = array_reverse(self::getUserRoots(self::FIRST_FW));
-        }
-        if (!is_null($directories)) {
-            return $directories;
+        if ($order === self::FIRST_APP) {
+            return array_reverse(self::getUserRoots(self::FIRST_FW));
         }
         $me = self::getInstance();
-        return $directories = array_merge(
+        return array_merge(
             [$me->main],
             $me->additional,
             $me->application ? [$me->application] : []
