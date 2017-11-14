@@ -6,7 +6,7 @@ use Difra\Ajaxer;
 use Difra\Controller;
 use Difra\Debugger;
 use Difra\Envi\Request;
-use Difra\Envi\UserAgent;
+use Difra\Resourcer;
 use Difra\View;
 
 /**
@@ -41,17 +41,15 @@ class Output
                 self::autoRender();
             }
             View::$rendered = true;
+        } elseif (Debugger::isEnabled() and isset($_GET['xslt']) and $_GET['xslt']) {
+            header('Content-Type: text/plain; charset="utf-8"');
+            echo Resourcer::getInstance('xslt')->compile(View::$instance);
+            View::$rendered = true;
         } elseif (Debugger::isEnabled() and isset($_GET['xml']) and $_GET['xml']) {
             if ($_GET['xml'] == '2') {
                 View\XML::fillXML();
             }
-            switch (UserAgent::getAgent()) {
-                case UserAgent::AGENT_SAFARI:
-                    header('Content-Type: text/plain; charset="utf-8"');
-                    break;
-                default:
-                    header('Content-Type: text/xml; charset="utf-8"');
-            }
+            header('Content-Type: text/xml; charset="utf-8"');
             $controller->xml->formatOutput = true;
             $controller->xml->encoding = 'utf-8';
             echo rawurldecode($controller->xml->saveXML());
@@ -60,7 +58,7 @@ class Output
             $controller->putExpires();
             // should be application/json, but opera doesn't understand it and offers to save file to disk
             header('Content-type: text/plain');
-            echo(Ajaxer::getResponse());
+            echo Ajaxer::getResponse();
             View::$rendered = true;
         } elseif (!View::$rendered) {
             $controller->putExpires();
