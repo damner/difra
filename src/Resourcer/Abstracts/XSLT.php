@@ -56,7 +56,9 @@ abstract class XSLT extends Common
                     continue;
                 }
 
-                if ($child->nodeName == 'xsl:template') {
+                if ($child->nodeName === 'xsl:template') {
+                    $child->setAttribute('from-file', $filename['raw']);
+
                     if ($child->hasAttribute('name')) {
                         $name = $child->getAttribute('name');
                         $mode = $child->getAttribute('mode');
@@ -68,7 +70,7 @@ abstract class XSLT extends Common
 
                         /** @var \DOMElement $oldNode */
                         foreach (array_slice($namedNodes[$key], 0, -1) as $oldNode) {
-                            $oldNode->setAttribute('name', $oldNode->getAttribute('name') . '--old');
+                            $oldNode->setAttribute('name', $oldNode->getAttribute('name') . '--redeclared');
                         }
 
                         $dom->documentElement->appendChild($node);

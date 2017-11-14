@@ -325,7 +325,7 @@ abstract class Common
                 $instances[$instance] = 1;
             }
         }
-        return array_keys($instances);
+        return array_reverse(array_keys($instances));
     }
 
     /**
