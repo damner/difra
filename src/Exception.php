@@ -6,7 +6,7 @@ namespace Difra;
  * Class Exception
  * @package Difra
  */
-class Exception extends \exception
+class Exception extends \Exception
 {
     /**
      * Wrapper for sending e-mails about exceptions which should never happen.
