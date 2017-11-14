@@ -25,21 +25,17 @@ abstract class XSLT extends Common
         */
 
         $files = $this->getFiles($instance);
-        $template = '<' . '?xml version="1.0" encoding="UTF-8"?' . '>
+        $template = '<?xml version="1.0" encoding="UTF-8"?>
 				<!DOCTYPE xsl:stylesheet>
-				<xsl:stylesheet
-					version="1.0"
-					xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
-					xmlns="http://www.w3.org/1999/xhtml">
-
+				<xsl:stylesheet	version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform" xmlns="http://www.w3.org/1999/xhtml">
 					<xsl:output method="html" encoding="utf-8" omit-xml-declaration="yes"/>
 					<xsl:param name="locale" select="/root/locale"/>
 					<xsl:template match="/root/locale"/>
 				</xsl:stylesheet>';
         $dom = new \DOMDocument();
         $dom->loadXML($template);
-        $usedNames = [];
-        $usedMatches = [];
+
+        $namedNodes = [];
         $namespaces = [];
         foreach ($files as $filename) {
             $template = new \DOMDocument();
@@ -55,34 +51,36 @@ abstract class XSLT extends Common
                     case XML_COMMENT_NODE:
                         continue 2;
                 }
-                if ($child->nodeName == 'xsl:template') {
-                    if ($child->hasAttribute('match')) {
-                        $m = $child->getAttribute('match');
-                        if ($child->hasAttribute('mode')) {
-                            $m .= ':' . $child->getAttribute('mode');
-                        }
-                        if (in_array($m, $usedMatches)) {
-                            continue;
-                        }
-                        $usedMatches[] = $m;
-                    } elseif ($child->hasAttribute('name')) {
-                        $n = $child->getAttribute('name');
-                        if ($child->hasAttribute('mode')) {
-                            $n .= ':' . $child->getAttribute('mode');
-                        }
-                        if (in_array($n, $usedNames)) {
-                            continue;
-                        }
-                        $usedNames[] = $n;
-                    } else {
-                        continue;
-                    }
-                } elseif ($child->nodeName == 'xsl:output') {
+
+                if ($child->nodeName === 'xsl:output') {
                     continue;
                 }
+
+                if ($child->nodeName == 'xsl:template') {
+                    if ($child->hasAttribute('name')) {
+                        $name = $child->getAttribute('name');
+                        $mode = $child->getAttribute('mode');
+
+                        $node = $dom->importNode($child, true);
+
+                        $key = $name . ':' . $mode;
+                        $namedNodes[$key][] = $node;
+
+                        /** @var \DOMElement $oldNode */
+                        foreach (array_slice($namedNodes[$key], 0, -1) as $oldNode) {
+                            $oldNode->setAttribute('name', $oldNode->getAttribute('name') . '--old');
+                        }
+
+                        $dom->documentElement->appendChild($node);
+
+                        continue;
+                    }
+                }
+
                 $dom->documentElement->appendChild($dom->importNode($child, true));
             }
         }
+
         if (!empty($namespaces)) {
             foreach ($namespaces as $k => $v) {
                 $dom->documentElement->setAttribute($k, $v);

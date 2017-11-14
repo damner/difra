@@ -107,26 +107,34 @@ class View
      */
     public function process(&$xml)
     {
-        Debugger::addLine("Render start (instance '{$this->templateInstance}')");
+        Debugger::addLine(sprintf('Render start (instance "%s")', $this->templateInstance));
 
         if (is_null($this->xslProcessor)) {
             if (!$resource = Resourcer::getInstance('xslt')->compile($this->templateInstance)) {
-                throw new Exception("XSLT resource not found");
+                throw new Exception('XSLT resource not found');
             }
-
             $time = microtime(true);
             $xslDom = new \DomDocument;
             $xslDom->resolveExternals = true;
             $xslDom->substituteEntities = true;
             if (!$xslDom->loadXML($resource)) {
-                throw new Exception("XSLT load problem for instance '{$this->templateInstance}'");
+                throw new Exception(sprintf('XSLT load problem for instance "%s"', $this->templateInstance));
             }
             Debugger::addLine('XSLT XML loaded in ' . round(1000 * (microtime(true) - $time), 2) . 'ms');
 
             $time = microtime(true);
             $this->xslProcessor = new \XSLTProcessor();
-            $this->xslProcessor->importStylesheet($xslDom);
+
+            $internalErrors = libxml_use_internal_errors(true);
+            $result = $this->xslProcessor->importStylesheet($xslDom);
+
             Debugger::addLine('XSLTProcessor initialized in ' . round(1000 * (microtime(true) - $time), 2) . 'ms');
+
+            XML::assertNoLibxmlErrors($internalErrors);
+
+            if ($result === false) {
+                throw new Exception('Unknown error in importStylesheet()');
+            }
 
             if (!HttpError::$error and !Debugger::$shutdown) {
                 View\XML::fillXML($xml, $this->templateInstance, $this->fillXML);
@@ -155,8 +163,8 @@ class View
                 fastcgi_finish_request();
             }
         } else {
-            $errormsg = libxml_get_errors(); //error_get_last();
-            throw new Exception($errormsg ? $errormsg['message'] : "Can't render templates");
+            $errormsg = error_get_last();
+            throw new Exception($errormsg ? $errormsg['message'] : 'Can\'t render templates');
         }
         return true;
     }

@@ -3,6 +3,7 @@
 namespace Difra\Resourcer\Abstracts;
 
 use Difra\Exception;
+use Difra\XML as XMLUtils;
 
 /**
  * Abstract adapter for XML resources
@@ -20,18 +21,12 @@ abstract class XML extends Common
         $files = $this->getFiles($instance);
         $newXml = new \SimpleXMLElement(sprintf('<?xml version="1.0" encoding="UTF-8"?><%s></%s>', $this->type, $this->type));
         foreach ($files as $file) {
-            $old = libxml_use_internal_errors(true);
+            $internalErrors = libxml_use_internal_errors(true);
             $xml = simplexml_load_file($file['raw']);
+            XMLUtils::assertNoLibxmlErrors($internalErrors);
             if ($xml === false) {
-                $message = '';
-                foreach (libxml_get_errors() as $error) {
-                    $message .= $this->createErrorMessage($error) . PHP_EOL;
-                }
-                libxml_use_internal_errors($old);
-                throw new Exception($message);
+                throw new Exception('Unknown error in simplexml_load_file()');
             }
-            libxml_use_internal_errors($old);
-
             $this->mergeXML($newXml, $xml);
             foreach ($xml->attributes() as $key => $value) {
                 $newXml->addAttribute($key, $value);
@@ -44,27 +39,6 @@ abstract class XML extends Common
         }
 
         return $newXml->asXML();
-    }
-
-    /**
-     * Create error message from LibXMLError object
-     * @param \LibXMLError $error
-     * @return string
-     */
-    private function createErrorMessage(\LibXMLError $error)
-    {
-        $type = 'error (unknown type)';
-        if ($error->level === \LIBXML_ERR_WARNING) {
-            $type = 'warning';
-        }
-        if ($error->level === \LIBXML_ERR_ERROR) {
-            $type = 'error';
-        }
-        if ($error->level === \LIBXML_ERR_FATAL) {
-            $type = 'fatal error';
-        }
-
-        return sprintf('libxml %s %s: %s in file %s (%s)', $type, $error->code, trim($error->message), $error->file, $error->line);
     }
 
     /**
