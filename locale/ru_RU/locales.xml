@@ -2,10 +2,7 @@
 	<adm>
 		<locales>
 			<title>Локалицация</title>
-			<module>Модуль</module>
-			<info>Локализовано</info>
-			<unused-lines>Лишних строк</unused-lines>
-			<missing-lines>Не хватает строк</missing-lines>
+			<key>Ключ</key>
 		</locales>
 	</adm>
 </locale>

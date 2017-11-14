@@ -28,55 +28,62 @@ class LocaleManage
      * Get locales information as XML
      * @param \DOMElement|\DOMNode $node
      */
-    public function getLocalesTreeXML($node)
+    public function getLocalesXML($node)
     {
-        $tree = $this->getLocalesTree();
-        foreach ($tree as $loc => $data) {
-            switch ($loc) {
-                case 'xpaths':
-                    break;
-                default:
-                    /** @var \DOMElement $localeNode */
-                    $localeNode = $node->appendChild($node->ownerDocument->createElement('locale'));
-                    $localeNode->setAttribute('name', $loc);
-                    foreach ($data as $module => $data2) {
-                        /** @var \DOMElement $moduleNode */
-                        $moduleNode = $localeNode->appendChild($localeNode->ownerDocument->createElement('module'));
-                        $moduleNode->setAttribute('name', $module);
-                        foreach ($data2 as $k => $v) {
-                            /** @var \DOMElement $strNode */
-                            $strNode = $moduleNode->appendChild($moduleNode->ownerDocument->createElement('item'));
-                            $strNode->setAttribute('xpath', $k);
-                            $strNode->setAttribute('missing', 0);
-                            foreach ($v as $k2 => $v2) {
-                                $strNode->setAttribute($k2, $v2);
-                            }
-                        }
-                        // missed strings
-                        foreach ($tree['xpaths'][$module] as $k => $v) {
-                            if (isset($data2[$k])) {
-                                continue;
-                            }
-                            $strNode = $moduleNode->appendChild($moduleNode->ownerDocument->createElement('item'));
-                            $strNode->setAttribute('xpath', $k);
-                            $strNode->setAttribute('missing', 1);
-                        }
-                    }
-                    // missed modules
-                    foreach ($tree['xpaths'] as $module => $data2) {
-                        if (isset($data[$module])) {
-                            continue;
-                        }
-                        $moduleNode = $localeNode->appendChild($localeNode->ownerDocument->createElement('module'));
-                        $moduleNode->setAttribute('name', $module);
-                        foreach ($data2 as $k => $v) {
-                            $strNode = $moduleNode->appendChild($moduleNode->ownerDocument->createElement('item'));
-                            $strNode->setAttribute('xpath', $k);
-                            $strNode->setAttribute('missing', 1);
-                            $strNode->setAttribute('source', basename($v));
-                        }
-                    }
+        $locales = $this->getLocales();
+
+        foreach ($locales as $localeName => $items) {
+            foreach ($items as $i => $data) {
+                $data['path'] = preg_replace('|^/locale/|u', '', $data['path']);
+
+                $attributes = [];
+                foreach ($data['attributes'] as $key => $value) {
+                    $attributes[] = $key.'="'.addcslashes($value, '"').'"';
+                }
+
+                $data['attributes-as-string'] = implode(' ', $attributes);
+
+                $data['key'] = $data['path'] . ' ' . $data['attributes-as-string'];
+
+
+                $locales[$localeName][$i] = $data;
             }
+        }
+
+        foreach ($locales as $localeName => $items) {
+            /** @var \DOMElement $localeNode */
+            $localeNode = $node->appendChild($node->ownerDocument->createElement('locale'));
+            $localeNode->setAttribute('name', $localeName);
+
+            foreach ($items as $data) {
+                /** @var \DOMElement $itemNode */
+                $itemNode = $localeNode->appendChild($localeNode->ownerDocument->createElement('item'));
+                $itemNode->setAttribute('path', $data['path']);
+                $itemNode->setAttribute('value', $data['value']);
+                $itemNode->setAttribute('key', $data['key']);
+                $itemNode->setAttribute('attributes', $data['attributes-as-string']);
+            }
+        }
+
+        $all = [];
+        foreach ($locales as $items) {
+            foreach ($items as $data) {
+                $all[$data['key']] = [
+                    'key' => $data['key'],
+                    'path' => $data['path'],
+                    'attributes' => $data['attributes-as-string'],
+                ];
+            }
+        }
+
+        /** @var \DOMElement $allNode */
+        $allNode = $node->appendChild($node->ownerDocument->createElement('all'));
+        foreach ($all as $data) {
+            /** @var \DOMElement $itemNode */
+            $itemNode = $allNode->appendChild($allNode->ownerDocument->createElement('item'));
+            $itemNode->setAttribute('key', $data['key']);
+            $itemNode->setAttribute('path', $data['path']);
+            $itemNode->setAttribute('attributes', $data['attributes']);
         }
     }
 
@@ -84,101 +91,68 @@ class LocaleManage
      * Get locales information as array
      * @return array
      */
-    public function getLocalesTree()
+    public function getLocales()
     {
-        $instances = $this->getLocalesList();
-        $locales = ['xpaths' => []];
-        foreach ($instances as $instance) {
+        $locales = [];
+        foreach (Locale::getInstance()->findInstances() as $instance) {
             $xml = new \DOMDocument();
-            $xml->loadXML($this->getLocale($instance));
+            $xml->loadXML(Resourcer::getInstance('locale')->compile($instance));
             $locales[$instance] = [];
-            $this->xml2tree($xml->documentElement, $locales[$instance], $locales['xpaths'], '');
+            $this->getItems($xml->documentElement, $locales[$instance]);
         }
         return $locales;
     }
 
     /**
-     * Get locales list
-     * @return array|bool
-     */
-    public function getLocalesList()
-    {
-        return Locale::getInstance()->findInstances();
-    }
-
-    /**
-     * Get current locale XML
-     * @param $locale
-     * @return bool|null
-     * @throws \Difra\Exception
-     */
-    public function getLocale($locale)
-    {
-        return Resourcer::getInstance('locale')->compile($locale);
-    }
-
-    /**
-     * Get locale as array
-     * @param \DOMElement|\DOMNode $node
+     * @param \DOMElement $node
      * @param array $arr
-     * @param array $allxpaths
      * @param string $xpath
      */
-    public function xml2tree($node, &$arr, &$allxpaths, $xpath)
+    private function getItems(\DOMElement $node, array &$arr, $xpath = null)
     {
-        foreach ($node->childNodes as $item) {
-            switch ($item->nodeType) {
-                case XML_ELEMENT_NODE:
-                    $this->xml2tree($item, $arr, $allxpaths, ($xpath ? $xpath . '/' : '') . $item->nodeName);
-                    break;
-                case XML_TEXT_NODE:
-                    $source = $node->getAttribute('source');
-                    $module = $this->getModule($source);
-                    if (!isset($arr[$module])) {
-                        $arr[$module] = [];
-                    }
-                    $arr[$module][$xpath] = [
-                        'source' => basename($source),
-                        'text' => $item->nodeValue,
-                        'usage' => ($usage = $this->findUsages($xpath))
-                    ];
-                    if ($usage) {
-                        if (!isset($allxpaths[$module])) {
-                            $allxpaths[$module] = [];
-                        }
-                        $allxpaths[$module][$xpath] = $source;
-                    }
-                    break;
+        $xpath .= '/' . $node->nodeName;
+
+        $attributes = [];
+        if ($node->hasAttributes()) {
+            foreach ($node->attributes as $attribute) {
+                $attributes[$attribute->name] = $attribute->value;
             }
         }
-    }
 
-    /**
-     * Detect module name for locale file
-     * @param $filename
-     * @return string
-     */
-    public function getModule($filename)
-    {
-        if (strpos($filename, DIR_PLUGINS) === 0) {
-            $res = substr($filename, strlen(DIR_PLUGINS));
-            $res = trim($res, '/');
-            $res = explode('/', $res, 2);
-            return 'plugins/' . $res[0];
-        } elseif (strpos($filename, DIR_FW) === 0) {
-            return 'fw';
-        } elseif (strpos($filename, DIR_SITE) === 0) {
-            return 'site';
-        } elseif (strpos($filename, DIR_ROOT . 'locale') === 0) {
-            return '/';
-        } else {
-            return 'unknown';
+        if ($node->hasAttribute('atomic')) {
+            $xml = '';
+            foreach ($node->childNodes as $child) {
+                $xml .= $node->ownerDocument->saveXml($child);
+            }
+
+            $arr[] = [
+                'path' => $xpath,
+                'attributes' => $attributes,
+                'value' => $xml,
+            ];
+
+            return;
+        }
+
+        foreach ($node->childNodes as $child) {
+            if ($child->nodeType === XML_TEXT_NODE) {
+                $arr[] = [
+                    'path' => $xpath,
+                    'attributes' => $attributes,
+                    'value' => $node->nodeValue,
+                ];
+
+                continue;
+            }
+
+            $this->getItems($child, $arr, $xpath);
         }
     }
 
     /**
+     * todo
      * Try to detect locale record usages
-     * @param $xpath
+     * @param string $xpath
      * @return int
      * @throws \Difra\Exception
      */
@@ -227,6 +201,7 @@ class LocaleManage
     }
 
     /**
+     * todo
      * Get all locale files from directory (recursive)
      * @param string[] $collection
      * @param string $dir

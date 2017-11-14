@@ -2,10 +2,7 @@
 	<adm>
 		<locales>
 			<title>Locales</title>
-			<module>Module</module>
-			<info>Localized</info>
-			<unused-lines>Unused lines</unused-lines>
-			<missing-lines>Missing lines</missing-lines>
+			<key>Key</key>
 		</locales>
 	</adm>
 </locale>
