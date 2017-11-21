@@ -143,8 +143,8 @@ class Locales
 
             if (is_array($value)) {
                 $value = array_reduce($value, function ($result, $value) {
-                    if ($value instanceof \DOMAttr) {
-                        $value = $value->value;
+                    if ($value instanceof \DOMNode) {
+                        $value = $value->nodeValue;
                     }
                     return $result . $value;
                 }, '');
