@@ -16,7 +16,7 @@ use Difra\Locales;
  * @param string|null $value3
  * @param string|null $field4
  * @param string|null $value4
- * @return string
+ * @return \DOMElement|null
  */
 function l10n(array $nodes, $field1 = null, $value1 = null, $field2 = null, $value2 = null, $field3 = null, $value3 = null, $field4 = null, $value4 = null)
 {

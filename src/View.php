@@ -146,7 +146,9 @@ class View
         }
 
         // transform template
-        if ($html = $this->xslProcessor->transformToDoc($xml)) {
+        $html = $this->xslProcessor->transformToDoc($xml);
+
+        if ($html) {
             if ($this->normalize) {
                 $html = self::normalize($html);
             } else {
