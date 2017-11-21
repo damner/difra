@@ -3,7 +3,10 @@
 use Difra\Locales;
 
 /**
- * Calls from XSLT
+ * Returns localized string
+ * For usage in XSLT
+ * Example: php:function('l10n', $locale/default/title)
+ *
  * @param \DOMElement[] $nodes
  * @param string|null $field1
  * @param string|null $value1
