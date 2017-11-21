@@ -1,15 +1,21 @@
 <?php
+
 return [
     'instances' => [
         'main' => [
             'include' => [
-                'all' => true
+                'all' => true,
             ]
         ],
         'adm' => [
             'include' => [
-                'all' => true
+                'all' => true,
             ]
-        ]
-    ]
+        ],
+        'all' => [
+            'include' => [
+                'common' => true,
+            ],
+        ],
+    ],
 ];

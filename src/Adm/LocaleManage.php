@@ -12,7 +12,6 @@ use Difra\Resourcer\Locale;
  */
 class LocaleManage
 {
-    // todo: revisit/fix locale management
 
     /**
      * Singleton
@@ -35,16 +34,16 @@ class LocaleManage
         foreach ($locales as $localeName => $items) {
             foreach ($items as $i => $data) {
                 $data['path'] = preg_replace('|^/locale/|u', '', $data['path']);
+                $data['value'] = preg_replace('|^<!--\s*atomic\s*-->|u', '', $data['value']);
 
                 $attributes = [];
                 foreach ($data['attributes'] as $key => $value) {
-                    $attributes[] = $key.'="'.addcslashes($value, '"').'"';
+                    $attributes[] = $key . '="' . addcslashes($value, '"') . '"';
                 }
 
                 $data['attributes-as-string'] = implode(' ', $attributes);
 
                 $data['key'] = $data['path'] . ' ' . $data['attributes-as-string'];
-
 
                 $locales[$localeName][$i] = $data;
             }
@@ -96,10 +95,12 @@ class LocaleManage
         $locales = [];
         foreach (Locale::getInstance()->findInstances() as $instance) {
             $xml = new \DOMDocument();
+            $xml->preserveWhiteSpace = false;
             $xml->loadXML(Resourcer::getInstance('locale')->compile($instance));
             $locales[$instance] = [];
             $this->getItems($xml->documentElement, $locales[$instance]);
         }
+
         return $locales;
     }
 
@@ -119,7 +120,24 @@ class LocaleManage
             }
         }
 
-        if ($node->hasAttribute('atomic')) {
+        $isTextNode = false;
+        foreach ($node->childNodes as $child) {
+            if ($child->nodeType === XML_TEXT_NODE) {
+                $isTextNode = true;
+
+                break;
+            }
+
+            if ($child->nodeType === XML_COMMENT_NODE) {
+                if (trim($child->textContent) === 'atomic') {
+                    $isTextNode = true;
+
+                    break;
+                }
+            }
+        }
+
+        if ($isTextNode) {
             $xml = '';
             foreach ($node->childNodes as $child) {
                 $xml .= $node->ownerDocument->saveXml($child);
@@ -142,6 +160,10 @@ class LocaleManage
                     'value' => $node->nodeValue,
                 ];
 
+                continue;
+            }
+
+            if ($child->nodeType === XML_COMMENT_NODE) {
                 continue;
             }
 

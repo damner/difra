@@ -56,6 +56,10 @@ abstract class XSLT extends Common
                     continue;
                 }
 
+                if ($child->nodeName === 'func:function') {
+                    $child->setAttribute('from-file', $filename['raw']);
+                }
+
                 if ($child->nodeName === 'xsl:template') {
                     $child->setAttribute('from-file', $filename['raw']);
 

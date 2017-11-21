@@ -125,6 +125,10 @@ class View
             $time = microtime(true);
             $this->xslProcessor = new \XSLTProcessor();
 
+            $this->xslProcessor->registerPHPFunctions([
+                'l10n',
+            ]);
+
             $internalErrors = libxml_use_internal_errors(true);
             $result = $this->xslProcessor->importStylesheet($xslDom);
 

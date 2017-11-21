@@ -19,6 +19,7 @@
 			</thead>
 			<tbody>
 				<xsl:for-each select="all/item">
+					<xsl:sort select="@key"/>
 					<xsl:variable name="key" select="@key"/>
 					<tr>
 						<td>

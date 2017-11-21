@@ -57,24 +57,6 @@ abstract class XML extends Common
 
         /** @var \SimpleXMLElement $node */
         foreach ($xml2->children() as $name => $node) {
-            if (isset($node['atomic'])) {
-                $dom1 = dom_import_simplexml($xml1);
-                $domNode = $dom1->ownerDocument->createDocumentFragment();
-                $domNode->appendXML($node->asXML());
-
-                if (isset($xml1->$name)) {
-                    $attributes = $xml1->$name->attributes();
-                    $dom1->replaceChild($domNode, dom_import_simplexml($xml1->$name));
-                    foreach ($attributes as $key => $value) {
-                        dom_import_simplexml($xml1->$name)->setAttribute($key, $value);
-                    }
-                } else {
-                    $dom1->appendChild($domNode);
-                }
-
-                continue;
-            }
-
             if (!isset($old[$name])) {
                 $subNode = $xml1->addChild($name);
 
@@ -125,4 +107,5 @@ abstract class XML extends Common
             }
         }
     }
+
 }

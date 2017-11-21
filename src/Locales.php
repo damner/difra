@@ -41,23 +41,116 @@ class Locales
     }
 
     /**
-     * Get text string from current locale (short form)
-     * @param string $xpath
-     * @param string[] $values
+     * Calls from XSLT
+     * @param \DOMElement[] $nodes
+     * @param string|null $field1
+     * @param string|null $value1
+     * @param string|null $field2
+     * @param string|null $value2
+     * @param string|null $field3
+     * @param string|null $value3
+     * @param string|null $field4
+     * @param string|null $value4
+     * @return string
+     */
+    public static function l10n(array $nodes, $field1 = null, $value1 = null, $field2 = null, $value2 = null, $field3 = null, $value3 = null, $field4 = null, $value4 = null)
+    {
+        $values = [];
+        foreach ([$field1 => $value1, $field2 => $value2, $field3 => $value3, $field4 => $value4] as $name => $value) {
+            if ($name === '') {
+                continue;
+            }
+
+            $values[$name] = $value;
+        }
+
+        return self::getInDomNodes($nodes, $values);
+    }
+
+    /**
+     * Get text string from current locale
+     * @param string $name Example: 'auth/register/login_invalid' or '/locale/auth/register/login_invalid' (old)
+     * @param array $values
      * @return string|null
      */
-    public static function get($xpath, array $values = [])
+    public static function get($name, array $values = [])
     {
-        $xml = self::getInstance()->getXPath($xpath);
+        $nodes = self::getInstance()->getXPath($name);
 
-        if ($xml === null) {
+        return self::getInDomNodes($nodes, $values);
+    }
+
+    /**
+     * @param \DOMElement[] $nodes
+     * @param array $values
+     * @return null|string
+     */
+    private static function getInDomNodes(array $nodes, array $values)
+    {
+        if (!count($nodes)) {
             return null;
         }
 
-        if (count($values)) {
-            $xml = preg_replace_callback('|<v-([a-zA-Z0-9-]+)\s*/>|u', function (array $matches) use ($values) {
-                if (array_key_exists($matches[1], $values)) {
-                    return htmlspecialchars($values[$matches[1]], ENT_QUOTES | ENT_HTML5);
+        $values2 = [];
+        foreach ($values as $name1 => $value) {
+            $name2 = preg_replace('|^filter-|', '', $name1);
+            $name3 = preg_replace('|^plural-|', '', $name1);
+
+            $name = $name2 !== $name1 ? $name2 : ($name3 !== $name1 ? $name3 : $name1);
+
+            if (is_array($value)) {
+                $value = array_reduce($value, function ($result, $value) {
+                    if ($value instanceof \DOMAttr) {
+                        $value = $value->value;
+                    }
+                    return $result . $value;
+                }, '');
+            }
+
+            $values2[$name] = [
+                'filter' => $name2 !== $name1,
+                'plural' => $name3 !== $name1,
+                'value' => $value,
+            ];
+        }
+
+        $filter = [];
+
+        foreach ($values2 as $name => $data) {
+            if ($data['filter']) {
+                $filter[$name] = $data['value'];
+            }
+        }
+
+        foreach ($values2 as $name => $data) {
+            if ($data['plural']) {
+                $filter['plural-' . $name] = self::getPluralN($data['value']);
+            }
+        }
+
+        $nodes = array_filter($nodes, function (\DOMElement $node) use ($filter) {
+            foreach ($filter as $name => $value) {
+                if ((string)$value !== $node->getAttribute($name)) {
+                    return false;
+                }
+            }
+
+            return true;
+        });
+
+        if (!count($nodes)) {
+            return null;
+        }
+
+        $xml = '';
+        foreach (end($nodes)->childNodes as $childNode) {
+            $xml .= $childNode->ownerDocument->saveXml($childNode);
+        }
+
+        if (count($values2)) {
+            $xml = preg_replace_callback('|<v-([a-zA-Z0-9-]+)\s*/>|u', function (array $matches) use ($values2) {
+                if (array_key_exists($matches[1], $values2)) {
+                    return htmlspecialchars($values2[$matches[1]]['value'], ENT_QUOTES | ENT_HTML5);
                 }
 
                 return $matches[0];
@@ -68,40 +161,51 @@ class Locales
     }
 
     /**
+     * @param int $n
+     * @return int
+     */
+    private static function getPluralN($n)
+    {
+        $n = abs($n);
+
+        $lang = self::getInstance()->locale;
+
+        if ($lang === 'ru_RU') {
+            return $n % 10 === 1 && $n % 100 !== 11 ? 1 : ($n % 10 >= 2 && $n % 10 <= 4 && ($n % 100 < 10 || $n % 100 >= 20) ? 2 : 5);
+        }
+
+        if ($lang === 'en_US') {
+            return $n === 1 ? 1 : 2;
+        }
+
+        return 1;
+    }
+
+    /**
      * Get locale string by XPath
-     * @param string $query
-     * @return null|string
+     * @param string $name Example: 'auth/register/login_invalid' or '/locale/auth/register/login_invalid' (old)
+     * @return \DOMElement[]
      * @throws Exception
      */
-    public function getXPath($query)
+    private function getXPath($name)
     {
+        // Backward compatibility
+        $name = preg_replace('|^/locale/|u', '', $name);
+
         $this->load();
 
         $xpath = new \DOMXPath($this->localeXML);
 
-        $elements = $xpath->query($query);
-        if ($elements === false) {
+        $nodes = $xpath->query($name, $this->localeXML->documentElement);
+        if ($nodes === false) {
             if (Debugger::isEnabled()) {
-                throw new Exception(sprintf('Bad XPath expression "%s"', $query));
+                throw new Exception(sprintf('Bad XPath expression "%s"', $name));
             }
 
-            return null;
+            return [];
         }
 
-        if (!$elements->length) {
-            if (Debugger::isEnabled()) {
-                return sprintf('No language item for "%s"', $query);
-            }
-
-            return null;
-        }
-
-        $xml = '';
-        foreach ($elements[0]->childNodes as $childNode){
-            $xml .= $this->localeXML->saveXml($childNode);
-        }
-
-        return $xml;
+        return iterator_to_array($nodes);
     }
 
     /**
@@ -139,7 +243,7 @@ class Locales
      * @param \DOMElement $node
      * @return void
      */
-    public function getLocaleXML($node)
+    public function getLocaleXML(\DOMElement $node)
     {
         $this->load();
         if (!is_null($this->localeXML)) {
