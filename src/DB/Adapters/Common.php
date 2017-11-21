@@ -139,7 +139,7 @@ abstract class Common
         } catch (\Exception $ex) {
             Exception::sendNotification($ex);
             throw new Exception(
-                "Database connection failed: {$this->config['name']}"
+                "Database connection failed: {$this->config['database']}"
                 . (Debugger::isEnabled() ? '(' . $ex->getMessage() . ')' : '')
             );
         }
