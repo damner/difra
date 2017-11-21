@@ -41,7 +41,6 @@ class Locales
     }
 
     /**
-     * Calls from XSLT
      * @param \DOMElement[] $nodes
      * @param string|null $field1
      * @param string|null $value1
@@ -64,7 +63,7 @@ class Locales
             $values[$name] = $value;
         }
 
-        return self::getInDomNodes($nodes, $values);
+        return (string)self::getInDomNodes($nodes, $values);
     }
 
     /**
