@@ -1,16 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
 	<xsl:template match="status">
 		<h1>
 			<xsl:value-of select="$locale/adm/stats/h2"/>
 		</h1>
 
 		<h2>Difra</h2>
-		<table class="summary">
-			<colgroup>
-				<col style="width:250px"/>
-				<col/>
-			</colgroup>
+		<table class="fields">
 			<tbody>
 				<tr>
 					<th>
@@ -45,14 +42,11 @@
 				</tr>
 			</tbody>
 		</table>
+
 		<h2>
 			<xsl:value-of select="$locale/adm/stats/server/title"/>
 		</h2>
-		<table class="summary">
-			<colgroup>
-				<col style="width:250px"/>
-				<col/>
-			</colgroup>
+		<table class="fields">
 			<tbody>
 				<tr>
 					<th>
@@ -84,27 +78,22 @@
 								</xsl:for-each>
 							</xsl:when>
 							<xsl:otherwise>
-								<xsl:value-of
-									select="$locale/adm/stats/permissions-ok"/>
+								<xsl:value-of select="$locale/adm/stats/permissions-ok"/>
 							</xsl:otherwise>
 						</xsl:choose>
 					</td>
 				</tr>
 			</tbody>
 		</table>
+
 		<h2>
 			<xsl:value-of select="$locale/adm/stats/extensions/title"/>
 		</h2>
-		<table class="summary">
-			<colgroup>
-				<col style="width:250px"/>
-				<col/>
-			</colgroup>
+		<table class="fields">
 			<tbody>
 				<tr>
 					<th>
-						<xsl:value-of
-							select="$locale/adm/stats/extensions/required-extensions"/>
+						<xsl:value-of select="$locale/adm/stats/extensions/required-extensions"/>
 					</th>
 					<td>
 						<xsl:choose>
@@ -120,8 +109,7 @@
 				<xsl:if test="not(extensions/@required='')">
 					<tr>
 						<th>
-							<xsl:value-of
-								select="$locale/adm/stats/extensions/missing-extensions"/>
+							<xsl:value-of select="$locale/adm/stats/extensions/missing-extensions"/>
 						</th>
 						<td style="color:red">
 							<xsl:value-of select="extensions/@required"/>
@@ -146,4 +134,5 @@
 			</tbody>
 		</table>
 	</xsl:template>
+
 </xsl:stylesheet>

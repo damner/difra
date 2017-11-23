@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
 
 	<xsl:template match="menu">
 		<xsl:param name="auto" select="1"/>
@@ -67,10 +67,8 @@
 								<xsl:otherwise>
 									<xsl:variable name="id" select="@id"/>
 									<xsl:choose>
-										<xsl:when
-											test="$locale/menu/*[name()=$instance]/*[name()=$id]">
-											<xsl:value-of
-												select="$locale/menu/*[name()=$instance]/*[name()=$id]"/>
+										<xsl:when test="$locale/menu/*[name()=$instance]/*[name()=$id]">
+											<xsl:value-of select="$locale/menu/*[name()=$instance]/*[name()=$id]"/>
 										</xsl:when>
 										<xsl:otherwise>
 											<xsl:value-of select="name()"/>
@@ -102,4 +100,5 @@
 			</ul>
 		</xsl:if>
 	</xsl:template>
+
 </xsl:stylesheet>

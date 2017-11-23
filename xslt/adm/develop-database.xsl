@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
     <xsl:template match="database">
         <xsl:if test="unify/*">
             <xsl:apply-templates select="unify" mode="develop-database"/>
@@ -32,18 +33,12 @@
         <xsl:choose>
             <xsl:when test="@diff=1">
                 <table>
-                    <colgroup>
-                        <col style="width:250px"/>
-                        <col/>
-                    </colgroup>
                     <tbody>
                         <tr>
                             <td colspan="2">
                                 <xsl:text>Table </xsl:text>
-                                <strong>`<xsl:value-of select="@name"/>`
-                                </strong>
+                                <strong>`<xsl:value-of select="@name"/>`</strong>
                                 <xsl:text> diff:</xsl:text>
-
                             </td>
                         </tr>
                         <tr>
@@ -147,4 +142,5 @@
             </xsl:for-each>
         </table>
     </xsl:template>
+
 </xsl:stylesheet>

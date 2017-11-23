@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
 	<xsl:template name="html-head">
 		<head>
 			<title>
@@ -37,13 +38,11 @@
 				</xsl:when>
 			</xsl:choose>
 
-			<link type="text/css" href="{/root/@urlprefix}/css/{$instance}.css?{/root/@build}"
-			      rel="stylesheet"/>
+			<link type="text/css" href="{/root/@urlprefix}/css/{$instance}.css?{/root/@build}" rel="stylesheet"/>
 			<script type="text/javascript" src="{/root/@urlprefix}/js/{$instance}.js?{/root/@build}"/>
 
 			<xsl:if test="/root/@debugConsole>0">
-				<link type="text/css" href="{/root/@urlprefix}/css/console.css?{/root/@build}"
-				      rel="stylesheet"/>
+				<link type="text/css" href="{/root/@urlprefix}/css/console.css?{/root/@build}" rel="stylesheet"/>
 				<script type="text/javascript" src="{/root/@urlprefix}/js/console.js?{/root/@build}"/>
 			</xsl:if>
 
@@ -85,4 +84,5 @@
 			</xsl:otherwise>
 		</xsl:choose>
 	</xsl:template>
+
 </xsl:stylesheet>

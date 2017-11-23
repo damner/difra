@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xsl:stylesheet xmlns:xsl="http://www.w3.org/1999/XSL/Transform" version="1.0">
+<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
+
 	<xsl:template match="/root/debug">
 		<div id="debug">
 			<xsl:choose>
@@ -48,8 +49,7 @@
 							<span class="tab-title">Все</span>
 							<div class="tab-content">
 								<table>
-									<xsl:apply-templates select="*"
-											     mode="debugLine"/>
+									<xsl:apply-templates select="*" mode="debugLine"/>
 								</table>
 							</div>
 						</li>
@@ -57,9 +57,7 @@
 							<span class="tab-title">Сообщения</span>
 							<div class="tab-content">
 								<table>
-									<xsl:apply-templates
-										select="*[@class='messages']"
-										mode="debugLine"/>
+									<xsl:apply-templates select="*[@class='messages']" mode="debugLine"/>
 								</table>
 							</div>
 						</li>
@@ -70,8 +68,7 @@
 							<span class="tab-title">Ошибки</span>
 							<div class="tab-content">
 								<table>
-									<xsl:apply-templates select="*[@class='errors']"
-											     mode="debugLine"/>
+									<xsl:apply-templates select="*[@class='errors']" mode="debugLine"/>
 								</table>
 							</div>
 						</li>
@@ -79,8 +76,7 @@
 							<span class="tab-title">События</span>
 							<div class="tab-content">
 								<table>
-									<xsl:apply-templates select="*[@class='events']"
-											     mode="debugLine"/>
+									<xsl:apply-templates select="*[@class='events']" mode="debugLine"/>
 								</table>
 							</div>
 						</li>
@@ -88,8 +84,7 @@
 							<span class="tab-title">База данных</span>
 							<div class="tab-content">
 								<table>
-									<xsl:apply-templates select="*[@class='db']"
-											     mode="debugLine"/>
+									<xsl:apply-templates select="*[@class='db']" mode="debugLine"/>
 								</table>
 							</div>
 						</li>
@@ -113,12 +108,9 @@
 			<td>
 				<xsl:value-of select="@timer"/>
 				<xsl:text> </xsl:text>
-
 			</td>
 			<td>
-				<xsl:value-of select="concat(
-					translate(substring(@class,1,1),'abcdefghijklmnopqrstuvwxyz','ABCDEFGHIJKLMNOPQRSTUVWXYZ'),
-					substring(@class,2))"/>
+				<xsl:value-of select="concat(translate(substring(@class, 1, 1), 'abcdefghijklmnopqrstuvwxyz', 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'), substring(@class, 2))"/>
 			</td>
 			<xsl:choose>
 				<xsl:when test="@class='errors'">
@@ -153,8 +145,7 @@
 										<xsl:value-of select="@function"/>
 										<xsl:for-each select="args">
 											<xsl:text>(</xsl:text>
-											<xsl:call-template
-												name="debug_args"/>
+											<xsl:call-template name="debug_args"/>
 											<xsl:text>)</xsl:text>
 										</xsl:for-each>
 									</td>
@@ -190,4 +181,5 @@
 		</xsl:choose>
 		<xsl:if test="not(position()=last())">,</xsl:if>
 	</xsl:template>
+
 </xsl:stylesheet>

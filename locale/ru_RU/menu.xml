@@ -12,7 +12,6 @@
 			<menu_development>Разработка</menu_development>
 			<menu_development_database>База данных</menu_development_database>
 			<menu_development_config>Состояние конфигурации</menu_development_config>
-			<menu_development_plugins>Плагины</menu_development_plugins>
 			<menu_development_locales>Локализация</menu_development_locales>
 			<menu_development_typograph>Типограф</menu_development_typograph>
 		</adm>
